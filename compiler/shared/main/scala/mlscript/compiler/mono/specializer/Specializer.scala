@@ -102,6 +102,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
           then BoundedTerm(LiteralVal(UnitLit(false)))
           else stmts.reverse.head match 
             case t: Term => getRes(t)
+            case other => throw MonomorphError(s"Encountered unlifted non-term ${other} in block ")
         })
       case If(body, alternate) => 
         val res = body match
@@ -130,6 +131,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
       case Bra(rcd, t) => 
         evaluate(t)
         termMap.addOne(term, getRes(t))
+      case other => throw MonomorphError(s"Unsupported term ${other}.")
       // case _: Bind => ???
       // case _: Test => ???
       // case With(term, Rcd(fields)) => ???
@@ -178,6 +180,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
               then 
                 IfThen(App(Var(name), toTuple(params.map(k => Var(k)).toList)), field)
               else throw MonomorphError(s"Selection of field ${field} from object ${o} results in no values")
+            case other => throw MonomorphError(s"Unexpected value ${other} from selection of ${field} from object ${o}")
           }
           valSetToBranches(next, Left(branchCase) :: acc)
         // case t@TupVal(fields) =>
